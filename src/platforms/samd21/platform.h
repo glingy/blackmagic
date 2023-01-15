@@ -30,7 +30,7 @@
 
 void spi_debug(uint8_t n);
 
-//#define PLATFORM_HAS_USBUART
+#define PLATFORM_HAS_USBUART
 // #define PLATFORM_HAS_TRACESWO // Not implemented yet, but possible in the future.
 #define TMP_AUX_DISABLE
 #define PLATFORM_NO_JTAG
