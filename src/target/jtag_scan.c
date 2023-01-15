@@ -25,6 +25,9 @@
  */
 
 #include "general.h"
+
+#ifndef PLATFORM_NO_JTAG
+
 #include "jtagtap.h"
 #include "jtag_scan.h"
 #include "target.h"
@@ -261,3 +264,4 @@ void jtag_dev_shift_dr(const uint8_t dev_index, uint8_t *data_out, const uint8_t
 	jtag_proc.jtagtap_tdi_seq(true, ones, device->dr_postscan);
 	jtagtap_return_idle(1);
 }
+#endif

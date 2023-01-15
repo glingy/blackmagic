@@ -40,14 +40,18 @@ static const usb_device_descriptor_s dev_desc = {
 	.bDeviceClass = 0xef, /* Miscellaneous Device */
 	.bDeviceSubClass = 2, /* Common Class */
 	.bDeviceProtocol = 1, /* Interface Association */
-#ifdef LM4F
+#if defined(LM4F) || defined(SAMD21)
 	.bMaxPacketSize0 = 64, /*Fixed for icdi*/
 #else
 	.bMaxPacketSize0 = 32,
 #endif
 	.idVendor = 0x1d50,
 	.idProduct = 0x6018,
+#if defined(SAMD21)
+	.bcdDevice = 0x0200,
+#else
 	.bcdDevice = 0x0100,
+#endif
 	.iManufacturer = 1,
 	.iProduct = 2,
 	.iSerialNumber = 3,

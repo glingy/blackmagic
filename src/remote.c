@@ -168,6 +168,7 @@ static void remote_packet_process_swd(unsigned i, char *packet)
 	}
 }
 
+#ifndef PLATFORM_NO_JTAG
 static void remote_packet_process_jtag(unsigned i, char *packet)
 {
 	uint32_t MS;
@@ -257,6 +258,8 @@ static void remote_packet_process_jtag(unsigned i, char *packet)
 		break;
 	}
 }
+
+#endif
 
 static void remote_packet_process_general(unsigned i, char *packet)
 {
@@ -441,7 +444,9 @@ void remote_packet_process(unsigned i, char *packet)
 		break;
 
 	case REMOTE_JTAG_PACKET:
+#ifndef PLATFORM_NO_JTAG
 		remote_packet_process_jtag(i, packet);
+#endif
 		break;
 
 	case REMOTE_GEN_PACKET:

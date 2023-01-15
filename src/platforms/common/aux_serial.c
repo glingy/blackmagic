@@ -18,6 +18,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "general.h"
+#ifndef TMP_AUX_DISABLE
+
 #if defined(STM32F0) || defined(STM32F1) || defined(STM32F3) || defined(STM32F4)
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/usart.h>
@@ -26,6 +29,10 @@
 #elif defined(LM4F)
 #include <libopencm3/lm4f/rcc.h>
 #include <libopencm3/lm4f/uart.h>
+#elif defined(SAMD21)
+#include <libopencm3/sam/d/pm.h>
+#include <libopencm3/sam/d/usart.h>
+#include <libopencm3/sam/d/gclk.h>
 #else
 #error "Unknown processor target"
 #endif
@@ -33,7 +40,6 @@
 #include <libopencm3/usb/usbd.h>
 #include <libopencm3/usb/cdc.h>
 
-#include "general.h"
 #include "usb_serial.h"
 #include "aux_serial.h"
 
@@ -43,7 +49,7 @@ static uint8_t aux_serial_receive_write_index = 0;
 /* Fifo out pointer, writes assumed to be atomic, should be only incremented outside RX ISR */
 static uint8_t aux_serial_receive_read_index = 0;
 
-#if defined(STM32F0) || defined(STM32F1) || defined(STM32F3) || defined(STM32F4)
+#if defined(STM32F0) || defined(STM32F1) || defined(STM32F3) || defined(STM32F4) || defined(SAMD21)
 static char aux_serial_transmit_buffer[2U][AUX_UART_BUFFER_SIZE];
 static uint8_t aux_serial_transmit_buffer_index = 0;
 static uint8_t aux_serial_transmit_buffer_consumed = 0;
@@ -206,6 +212,43 @@ void aux_serial_init(void)
 	//nvic_set_priority(USBUSART_IRQ, IRQ_PRI_USBUSART);
 	nvic_enable_irq(USBUART_IRQ);
 }
+#elif defined(SAMD21)
+void aux_serial_init(void)
+{
+	UART_PIN_SETUP();
+
+	pm_enable(USBUSART_PM);
+
+	// Note: Uses GCLK2 for 48MHz/7 clock
+	gclk_enable_gen(GCLK_GEN_ID2, GCLK_GEN_SRC_DFLL48M, GCLK_GEN_DIVSEL_DIRECT, 7);
+	gclk_enable_clk(GCLK_CLK_USB, GCLK_GEN_ID2);
+
+	/* Setup UART parameters */
+	usart_set_baudrate(USBUSART, 38400);
+	usart_set_databits(USBUSART, 8);
+	usart_set_stopbits(USBUSART, USART_STOPBITS_1);
+	usart_set_mode(USBUSART, USART_MODE_TX_RX);
+	usart_set_parity(USBUSART, USART_PARITY_NONE);
+	usart_set_pads(USBUSART, USBUSART_TXPO, USBUSART_RXPO);
+
+	// Enable FIFO
+	usart_enable_fifo(USBUART);
+
+	// Set FIFO interrupt trigger levels to 1/8 full for RX buffer and
+	// 7/8 empty (1/8 full) for TX buffer
+	uart_set_fifo_trigger_levels(USBUART, UART_FIFO_RX_TRIG_1_8, UART_FIFO_TX_TRIG_7_8);
+
+	uart_clear_interrupt_flag(USBUART, UART_INT_RX | UART_INT_RT);
+
+	/* Enable interrupts */
+	uart_enable_interrupts(UART0, UART_INT_RX | UART_INT_RT);
+
+	/* Finally enable the USART. */
+	usart_enable(USBUSART);
+
+	//nvic_set_priority(USBUSART_IRQ, IRQ_PRI_USBUSART);
+	nvic_enable_irq(USBUART_IRQ);
+}
 #endif
 
 void aux_serial_set_encoding(usb_cdc_line_coding_s *coding)
@@ -219,6 +262,8 @@ void aux_serial_set_encoding(usb_cdc_line_coding_s *coding)
 		usart_set_databits(USBUSART, coding->bDataBits <= 8U ? 8 : 9);
 #elif defined(LM4F)
 	uart_set_databits(USBUART, coding->bDataBits);
+#elif defined(SAMD21)
+	usart_set_databits(USBUSART, coding->bDataBits);
 #endif
 
 	switch (coding->bCharFormat) {
@@ -226,7 +271,9 @@ void aux_serial_set_encoding(usb_cdc_line_coding_s *coding)
 		usart_set_stopbits(USBUSART, USART_STOPBITS_1);
 		break;
 	case 1:
+#if !defined(SAMD21)
 		usart_set_stopbits(USBUSART, USART_STOPBITS_1_5);
+#endif
 		break;
 	case 2:
 	default:
@@ -248,7 +295,7 @@ void aux_serial_set_encoding(usb_cdc_line_coding_s *coding)
 	}
 }
 
-#if defined(STM32F0) || defined(STM32F1) || defined(STM32F3) || defined(STM32F4)
+#if defined(STM32F0) || defined(STM32F1) || defined(STM32F3) || defined(STM32F4) || defined(SAMD21)
 void aux_serial_set_led(const aux_serial_led_e led)
 {
 	aux_serial_led_state |= led;
@@ -529,4 +576,6 @@ void USBUART_ISR(void)
 		aux_serial_receive_read_index %= AUX_UART_BUFFER_SIZE;
 	}
 }
+#endif
+
 #endif

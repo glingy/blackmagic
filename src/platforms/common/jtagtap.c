@@ -26,6 +26,8 @@
 #include "jtagtap.h"
 #include "gdb_packet.h"
 
+#ifndef PLATFORM_NO_JTAG
+
 jtag_proc_s jtag_proc;
 
 static void jtagtap_reset(void);
@@ -283,3 +285,5 @@ static void jtagtap_cycle(const bool tms, const bool tdi, const size_t clock_cyc
 	else
 		jtagtap_cycle_no_delay(clock_cycles - 1U);
 }
+
+#endif

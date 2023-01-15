@@ -63,8 +63,10 @@ static bool gdb_serial_dtr = true;
 
 static void usb_serial_set_state(usbd_device *dev, uint16_t iface, uint8_t ep);
 
+#ifndef TMP_AUX_DISABLE
 static void debug_serial_send_callback(usbd_device *dev, uint8_t ep);
 static void debug_serial_receive_callback(usbd_device *dev, uint8_t ep);
+#endif
 
 #if defined(STM32F0) || defined(STM32F1) || defined(STM32F3) || defined(STM32F4)
 static bool debug_serial_send_complete = true;
@@ -112,6 +114,7 @@ bool gdb_serial_get_dtr(void)
 	return gdb_serial_dtr;
 }
 
+#ifndef TMP_AUX_DISABLE
 static usbd_request_return_codes_e debug_serial_control_request(usbd_device *dev, usb_setup_data_s *req, uint8_t **buf,
 	uint16_t *const len, void (**complete)(usbd_device *dev, usb_setup_data_s *req))
 {
@@ -139,6 +142,7 @@ static usbd_request_return_codes_e debug_serial_control_request(usbd_device *dev
 	}
 	return USBD_REQ_NOTSUPP;
 }
+#endif
 
 void usb_serial_set_state(usbd_device *const dev, const uint16_t iface, const uint8_t ep)
 {
@@ -169,19 +173,23 @@ void usb_serial_set_config(usbd_device *dev, uint16_t value)
 	usbd_ep_setup(dev, (CDCACM_GDB_ENDPOINT + 1U) | USB_REQ_TYPE_IN, USB_ENDPOINT_ATTR_INTERRUPT, 16, NULL);
 
 	/* Serial interface */
+#ifndef TMP_AUX_DISABLE
 	usbd_ep_setup(
 		dev, CDCACM_UART_ENDPOINT, USB_ENDPOINT_ATTR_BULK, CDCACM_PACKET_SIZE / 2U, debug_serial_receive_callback);
 	usbd_ep_setup(dev, CDCACM_UART_ENDPOINT | USB_REQ_TYPE_IN, USB_ENDPOINT_ATTR_BULK, CDCACM_PACKET_SIZE,
 		debug_serial_send_callback);
 	usbd_ep_setup(dev, (CDCACM_UART_ENDPOINT + 1U) | USB_REQ_TYPE_IN, USB_ENDPOINT_ATTR_INTERRUPT, 16, NULL);
+#endif
 
 #ifdef PLATFORM_HAS_TRACESWO
 	/* Trace interface */
 	usbd_ep_setup(dev, TRACE_ENDPOINT | USB_REQ_TYPE_IN, USB_ENDPOINT_ATTR_BULK, 64, trace_buf_drain);
 #endif
 
+#ifndef TMP_AUX_DISABLE
 	usbd_register_control_callback(dev, USB_REQ_TYPE_CLASS | USB_REQ_TYPE_INTERFACE,
 		USB_REQ_TYPE_TYPE | USB_REQ_TYPE_RECIPIENT, debug_serial_control_request);
+#endif
 	usbd_register_control_callback(dev, USB_REQ_TYPE_CLASS | USB_REQ_TYPE_INTERFACE,
 		USB_REQ_TYPE_TYPE | USB_REQ_TYPE_RECIPIENT, gdb_serial_control_request);
 
@@ -189,7 +197,7 @@ void usb_serial_set_config(usbd_device *dev, uint16_t value)
 	 * Allows the use of /dev/tty* devices on *BSD/MacOS
 	 */
 	usb_serial_set_state(dev, GDB_IF_NO, CDCACM_GDB_ENDPOINT);
-	usb_serial_set_state(dev, UART_IF_NO, CDCACM_UART_ENDPOINT);
+	//usb_serial_set_state(dev, UART_IF_NO, CDCACM_UART_ENDPOINT);
 
 #if defined(ENABLE_DEBUG) && defined(PLATFORM_HAS_DEBUG)
 	initialise_monitor_handles();
@@ -278,6 +286,7 @@ void debug_serial_run(void)
 }
 #endif
 
+#ifndef TMP_AUX_DISABLE
 static void debug_serial_send_callback(usbd_device *dev, uint8_t ep)
 {
 	(void)ep;
@@ -286,7 +295,9 @@ static void debug_serial_send_callback(usbd_device *dev, uint8_t ep)
 	debug_serial_send_data();
 #endif
 }
+#endif
 
+#ifndef TMP_AUX_DISABLE
 static void debug_serial_receive_callback(usbd_device *dev, uint8_t ep)
 {
 #ifdef ENABLE_RTT
@@ -315,6 +326,7 @@ static void debug_serial_receive_callback(usbd_device *dev, uint8_t ep)
 		usbd_ep_nak_set(dev, ep, 1);
 #endif
 }
+#endif
 
 #ifdef ENABLE_DEBUG
 #ifdef PLATFORM_HAS_DEBUG

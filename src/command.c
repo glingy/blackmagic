@@ -52,16 +52,22 @@
 static bool cmd_version(target_s *t, int argc, const char **argv);
 static bool cmd_help(target_s *t, int argc, const char **argv);
 
+#ifndef PLATFORM_NO_JTAG
 static bool cmd_jtag_scan(target_s *t, int argc, const char **argv);
+#endif
 static bool cmd_swdp_scan(target_s *t, int argc, const char **argv);
+#ifndef PLATFORM_NO_JTAG
 static bool cmd_auto_scan(target_s *t, int argc, const char **argv);
+#endif
 static bool cmd_frequency(target_s *t, int argc, const char **argv);
 static bool cmd_targets(target_s *t, int argc, const char **argv);
 static bool cmd_morse(target_s *t, int argc, const char **argv);
 static bool cmd_halt_timeout(target_s *t, int argc, const char **argv);
 static bool cmd_connect_reset(target_s *t, int argc, const char **argv);
 static bool cmd_reset(target_s *t, int argc, const char **argv);
+#ifndef PLATFORM_NO_JTAG
 static bool cmd_tdi_low_reset(target_s *t, int argc, const char **argv);
+#endif
 #ifdef PLATFORM_HAS_POWER_SWITCH
 static bool cmd_target_power(target_s *t, int argc, const char **argv);
 #endif
@@ -82,17 +88,23 @@ static bool cmd_shutdown_bmda(target_s *t, int argc, const char **argv);
 const command_s cmd_list[] = {
 	{"version", cmd_version, "Display firmware version info"},
 	{"help", cmd_help, "Display help for monitor commands"},
+#ifndef PLATFORM_NO_JTAG
 	{"jtag_scan", cmd_jtag_scan, "Scan JTAG chain for devices"},
+#endif
 	{"swdp_scan", cmd_swdp_scan, "Scan SW-DP for devices"},
+#ifndef PLATFORM_NO_JTAG
 	{"auto_scan", cmd_auto_scan, "Automatically scan all chain types for devices"},
+#endif
 	{"frequency", cmd_frequency, "set minimum high and low times"},
 	{"targets", cmd_targets, "Display list of available targets"},
 	{"morse", cmd_morse, "Display morse error message"},
 	{"halt_timeout", cmd_halt_timeout, "Timeout (ms) to wait until Cortex-M is halted: (Default 2000)"},
 	{"connect_rst", cmd_connect_reset, "Configure connect under reset: (enable|disable)"},
 	{"reset", cmd_reset, "Pulse the nRST line - disconnects target"},
+#ifndef PLATFORM_NO_JTAG
 	{"tdi_low_reset", cmd_tdi_low_reset,
 		"Pulse nRST with TDI set low to attempt to wake certain targets up (eg LPC82x)"},
+#endif
 #ifdef PLATFORM_HAS_POWER_SWITCH
 	{"tpwr", cmd_target_power, "Supplies power to the target: (enable|disable)"},
 #endif
@@ -194,6 +206,7 @@ bool cmd_help(target_s *t, int argc, const char **argv)
 	return true;
 }
 
+#ifndef PLATFORM_NO_JTAG
 static bool cmd_jtag_scan(target_s *t, int argc, const char **argv)
 {
 	(void)t;
@@ -242,6 +255,7 @@ static bool cmd_jtag_scan(target_s *t, int argc, const char **argv)
 	morse(NULL, false);
 	return true;
 }
+#endif
 
 bool cmd_swdp_scan(target_s *t, int argc, const char **argv)
 {
@@ -286,6 +300,7 @@ bool cmd_swdp_scan(target_s *t, int argc, const char **argv)
 	return true;
 }
 
+#ifndef PLATFORM_NO_JTAG
 bool cmd_auto_scan(target_s *t, int argc, const char **argv)
 {
 	(void)t;
@@ -340,6 +355,7 @@ bool cmd_auto_scan(target_s *t, int argc, const char **argv)
 	morse(NULL, false);
 	return true;
 }
+#endif
 
 bool cmd_frequency(target_s *t, int argc, const char **argv)
 {
@@ -461,6 +477,7 @@ static bool cmd_reset(target_s *t, int argc, const char **argv)
 	return true;
 }
 
+#ifndef PLATFORM_NO_JTAG
 static bool cmd_tdi_low_reset(target_s *t, int argc, const char **argv)
 {
 	(void)t;
@@ -470,6 +487,7 @@ static bool cmd_tdi_low_reset(target_s *t, int argc, const char **argv)
 	cmd_reset(NULL, 0, NULL);
 	return true;
 }
+#endif
 
 #ifdef PLATFORM_HAS_POWER_SWITCH
 static bool cmd_target_power(target_s *t, int argc, const char **argv)

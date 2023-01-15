@@ -43,7 +43,7 @@
 void aux_serial_init(void);
 void aux_serial_set_encoding(usb_cdc_line_coding_s *coding);
 
-#if defined(STM32F0) || defined(STM32F1) || defined(STM32F3) || defined(STM32F4)
+#if defined(STM32F0) || defined(STM32F1) || defined(STM32F3) || defined(STM32F4) || defined(SAMD21)
 typedef enum aux_serial_led {
 	AUX_SERIAL_LED_TX = (1U << 0U),
 	AUX_SERIAL_LED_RX = (1U << 1U)

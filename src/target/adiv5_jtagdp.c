@@ -23,6 +23,8 @@
  */
 
 #include "general.h"
+
+#ifndef PLATFORM_NO_JTAG
 #include "exception.h"
 #include "adiv5.h"
 #include "jtag_scan.h"
@@ -115,3 +117,5 @@ void adiv5_jtagdp_abort(adiv5_debug_port_s *dp, uint32_t abort)
 	jtag_dev_write_ir(dp->dp_jd_index, IR_ABORT);
 	jtag_dev_shift_dr(dp->dp_jd_index, NULL, (const uint8_t *)&request, 35);
 }
+
+#endif
